@@ -1,7 +1,5 @@
 package com.example.juliancamilomunoz.exxmasterdetail;
 
-
-
 /**
  * Created by Xingke on 25/05/2015.
  */
@@ -9,17 +7,34 @@ package com.example.juliancamilomunoz.exxmasterdetail;
 import android.content.Intent;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
+import android.support.v4.app.FragmentTransaction;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.FrameLayout;
 
 
 public class ItemsListActivity extends FragmentActivity implements
         ItemsListFragment.OnListItemSelectedListener{
 
+    // Flag determines if this is a one or two pane layout
+    private boolean isTwoPane = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_items_list);
+        // Call this to determine which layout we are in (tablet or phone)
+        determinePaneLayout();
+    }
+
+    private void determinePaneLayout() {
+        FrameLayout fragmentItemDetail = (FrameLayout) findViewById(R.id.flDetailContainer);
+        if (fragmentItemDetail != null) {
+            isTwoPane = true;
+            ItemsListFragment fragmentItemsList =
+                    (ItemsListFragment) getSupportFragmentManager().findFragmentById(R.id.fragmentItemsList);
+            fragmentItemsList.setActivateOnItemClick(true);
+        }
     }
 
 
@@ -48,11 +63,17 @@ public class ItemsListActivity extends FragmentActivity implements
     // Handles the event when the fragment list item is selected
     @Override
     public void onItemSelected(Item item) {
-        // For phone, launch detail activity using intent
-        Intent i = new Intent(this, ItemDetailActivity.class);
-        // Embed the serialized item
-        i.putExtra("item", item);
-        // Start the activity
-        startActivity(i);
+        if (isTwoPane) { // single activity with list and detail
+            // Replace framelayout with new detail fragment
+            ItemDetailFragment fragmentItem = ItemDetailFragment.newInstance(item);
+            FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+            ft.replace(R.id.flDetailContainer, fragmentItem);
+            ft.commit();
+        } else { // go to separate activity
+            // launch detail activity using intent
+            Intent i = new Intent(this, ItemDetailActivity.class);
+            i.putExtra("item", item);
+            startActivity(i);
+        }
     }
 }
